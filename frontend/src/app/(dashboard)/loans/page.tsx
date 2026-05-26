@@ -5,8 +5,8 @@ import LoanForm from '@/components/forms/LoanForm';
 import { API_BASE_URL } from '@/config/api';
 
 export default function LoansPage() {
-  const [customers, setCustomers] = useState([]);
-  const [loans, setLoans] = useState([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'create' | 'list'>('create');
