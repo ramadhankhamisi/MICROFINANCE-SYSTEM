@@ -11,11 +11,8 @@ interface CalculationPreview {
   totalDue: number;
   repaymentDays: number;
   dailyPayment: number;
-  tierName: string;
-  recommendedRange: { min: number; max: number };
   validation: {
     isValid: boolean;
-    recommendedRange: { min: number; max: number };
     allowedRange: { min: number; max: number };
     message: string;
   };
@@ -175,13 +172,13 @@ export default function LoanForm({ customers, onSuccess, loading = false }: Loan
             onChange={handleInputChange}
             placeholder="Enter number of days"
             min="1"
+            max="365"
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {preview?.validation.allowedRange && (
             <p className="text-xs text-gray-500 mt-1">
-              Allowed range: {preview.validation.allowedRange.min} - {preview.validation.allowedRange.max} days
-              (Recommended: {preview.validation.recommendedRange.min} - {preview.validation.recommendedRange.max} days)
+              Loan officer selects the repayment period. Allowed range: {preview.validation.allowedRange.min} - {preview.validation.allowedRange.max} days.
             </p>
           )}
         </div>
@@ -222,8 +219,8 @@ export default function LoanForm({ customers, onSuccess, loading = false }: Loan
                     </p>
                   </div>
                   <div className="col-span-2 bg-white p-3 rounded">
-                    <p className="text-xs text-gray-600">Tier</p>
-                    <p className="text-sm font-semibold text-gray-900">{preview.tierName}</p>
+                    <p className="text-xs text-gray-600">Selected Repayment Period</p>
+                    <p className="text-sm font-semibold text-gray-900">{preview.repaymentDays} days</p>
                   </div>
                 </div>
 

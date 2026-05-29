@@ -15,8 +15,8 @@ export const validateCreateLoan = [
     })
     .withMessage('Loan amount must be between 10,000 and 10,000,000'),
   body('repayment_days')
-    .isInt({ min: 1 })
-    .withMessage('Repayment days must be a positive integer')
+    .isInt({ min: 1, max: 365 })
+    .withMessage('Repayment days must be between 1 and 365')
     .custom((value, { req }) => {
       const validation = FlexibleLoanCalculationService.validateRepaymentDays(
         req.body.principal_amount,
@@ -27,7 +27,7 @@ export const validateCreateLoan = [
       }
       return true;
     })
-    .withMessage('Invalid repayment days for this loan amount'),
+    .withMessage('Invalid repayment days'),
 ];
 
 export const validateRepaymentDaysInput = [
