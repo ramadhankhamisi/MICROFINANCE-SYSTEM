@@ -10,7 +10,9 @@ node_modules/
 /build
 /dist
 /.next
+frontend/.next/
 /out
+*.tsbuildinfo
 
 # Misc
 .DS_Store

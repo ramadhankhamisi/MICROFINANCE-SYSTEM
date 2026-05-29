@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { api } from '@/utils/api';
 import { API_BASE_URL } from '@/config/api';
 
 interface CalculationPreview {
@@ -21,7 +22,12 @@ interface CalculationPreview {
 }
 
 interface LoanFormProps {
-  customers: any[];
+  customers: Array<{
+    id: number;
+    first_name: string;
+    last_name: string;
+    phone: string;
+  }>;
   onSuccess?: () => void;
   loading?: boolean;
 }
@@ -31,7 +37,6 @@ export default function LoanForm({ customers, onSuccess, loading = false }: Loan
     customer_id: '',
     principal_amount: '',
     repayment_days: '',
-    loan_officer_id: '',
   });
 
   const [preview, setPreview] = useState<CalculationPreview | null>(null);
@@ -96,24 +101,13 @@ export default function LoanForm({ customers, onSuccess, loading = false }: Loan
       setIsSubmitting(true);
       setError('');
 
-      const response = await fetch(`${API_BASE_URL}/flexible-loans`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...formData,
-          principal_amount: parseFloat(formData.principal_amount),
-          repayment_days: parseInt(formData.repayment_days),
-          branch_id: localStorage.getItem('branch_id'),
-        }),
+      await api.post('/flexible-loans', {
+        ...formData,
+        principal_amount: parseFloat(formData.principal_amount),
+        repayment_days: parseInt(formData.repayment_days, 10),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error?.message || 'Failed to create loan');
-      }
-
-      setFormData({ customer_id: '', principal_amount: '', repayment_days: '', loan_officer_id: '' });
+      setFormData({ customer_id: '', principal_amount: '', repayment_days: '' });
       setPreview(null);
       onSuccess?.();
     } catch (err) {
@@ -190,22 +184,6 @@ export default function LoanForm({ customers, onSuccess, loading = false }: Loan
               (Recommended: {preview.validation.recommendedRange.min} - {preview.validation.recommendedRange.max} days)
             </p>
           )}
-        </div>
-
-        {/* Loan Officer */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Loan Officer <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="loan_officer_id"
-            value={formData.loan_officer_id}
-            onChange={handleInputChange}
-            placeholder="Your Officer ID (UUID)"
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
         </div>
 
         {/* Calculation Preview */}

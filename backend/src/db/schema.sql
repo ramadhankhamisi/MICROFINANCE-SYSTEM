@@ -1,4 +1,3 @@
--- Branches Table
 CREATE TABLE IF NOT EXISTS branches (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE,
@@ -6,13 +5,11 @@ CREATE TABLE IF NOT EXISTS branches (
   address TEXT,
   city VARCHAR(100),
   phone VARCHAR(20),
-  manager_id INTEGER,
   status VARCHAR(20) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Users/Staff Table
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
@@ -27,7 +24,6 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Refresh Tokens Table
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -36,7 +32,6 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customers Table
 CREATE TABLE IF NOT EXISTS customers (
   id SERIAL PRIMARY KEY,
   first_name VARCHAR(100) NOT NULL,
@@ -53,37 +48,41 @@ CREATE TABLE IF NOT EXISTS customers (
   UNIQUE(national_id, branch_id)
 );
 
--- Loans Table
 CREATE TABLE IF NOT EXISTS loans (
   id SERIAL PRIMARY KEY,
+  loan_number VARCHAR(30) NOT NULL UNIQUE,
   customer_id INTEGER NOT NULL REFERENCES customers(id),
   branch_id INTEGER NOT NULL REFERENCES branches(id),
   loan_officer_id INTEGER REFERENCES users(id),
-  amount DECIMAL(15, 2) NOT NULL,
-  loan_type VARCHAR(50) NOT NULL,
-  interest_rate DECIMAL(5, 2) NOT NULL,
-  term_months INTEGER NOT NULL,
+  principal_amount DECIMAL(15, 2) NOT NULL CHECK (principal_amount > 0),
+  interest_rate DECIMAL(5, 2) NOT NULL DEFAULT 20.00,
+  repayment_days INTEGER NOT NULL CHECK (repayment_days > 0),
+  daily_payment DECIMAL(15, 2) NOT NULL,
+  total_amount_due DECIMAL(15, 2) NOT NULL,
+  amount_paid DECIMAL(15, 2) NOT NULL DEFAULT 0,
+  amount_outstanding DECIMAL(15, 2) NOT NULL,
+  application_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  maturity_date DATE NOT NULL,
+  next_repayment_date DATE,
+  last_payment_date DATE,
   status VARCHAR(20) DEFAULT 'active',
-  disbursal_date DATE,
-  maturity_date DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_by INTEGER REFERENCES users(id),
+  updated_by INTEGER REFERENCES users(id)
 );
 
--- Repayments Table
 CREATE TABLE IF NOT EXISTS repayments (
   id SERIAL PRIMARY KEY,
   loan_id INTEGER NOT NULL REFERENCES loans(id),
-  payment_date DATE NOT NULL,
-  principal_amount DECIMAL(15, 2) NOT NULL,
-  interest_amount DECIMAL(15, 2) NOT NULL,
-  total_amount DECIMAL(15, 2) NOT NULL,
-  status VARCHAR(20) DEFAULT 'pending',
+  transaction_date DATE NOT NULL,
+  amount DECIMAL(15, 2) NOT NULL CHECK (amount > 0),
+  payment_method VARCHAR(50) DEFAULT 'cash',
   recorded_by INTEGER REFERENCES users(id),
+  status VARCHAR(20) DEFAULT 'completed',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Transactions Table
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   branch_id INTEGER NOT NULL REFERENCES branches(id),
@@ -91,17 +90,14 @@ CREATE TABLE IF NOT EXISTS transactions (
   category VARCHAR(100) NOT NULL,
   amount DECIMAL(15, 2) NOT NULL,
   description TEXT,
-  reference_number VARCHAR(100),
   transaction_date DATE DEFAULT CURRENT_DATE,
   recorded_by INTEGER REFERENCES users(id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create Indexes
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_branch_id ON users(branch_id);
-CREATE INDEX idx_customers_branch_id ON customers(branch_id);
-CREATE INDEX idx_loans_customer_id ON loans(customer_id);
-CREATE INDEX idx_loans_status ON loans(status);
-CREATE INDEX idx_repayments_loan_id ON repayments(loan_id);
-CREATE INDEX idx_transactions_branch_id ON transactions(branch_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_customers_branch_id ON customers(branch_id);
+CREATE INDEX IF NOT EXISTS idx_loans_branch_id ON loans(branch_id);
+CREATE INDEX IF NOT EXISTS idx_loans_customer_id ON loans(customer_id);
+CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
+CREATE INDEX IF NOT EXISTS idx_repayments_loan_id ON repayments(loan_id);

@@ -3,7 +3,7 @@ import FlexibleLoanCalculationService from '../services/flexibleLoanCalculationS
 
 export const validateCreateLoan = [
   body('customer_id')
-    .isUUID()
+    .isInt({ min: 1 })
     .withMessage('Valid customer ID required'),
   body('principal_amount')
     .isDecimal({ decimal_digits: '1,2' })
@@ -28,9 +28,6 @@ export const validateCreateLoan = [
       return true;
     })
     .withMessage('Invalid repayment days for this loan amount'),
-  body('loan_officer_id')
-    .isUUID()
-    .withMessage('Valid loan officer ID required'),
 ];
 
 export const validateRepaymentDaysInput = [

@@ -21,6 +21,7 @@ router.post(
   FlexibleLoanController.create
 );
 
+router.get('/', FlexibleLoanController.getAll);
 router.get('/:id', FlexibleLoanController.getOne);
 
 router.post(

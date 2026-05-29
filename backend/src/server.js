@@ -4,8 +4,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
 import { connectDatabase } from './config/database.js';
 import { swaggerSpec } from './config/swagger.js';
@@ -22,18 +20,9 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 const startTime = Date.now();
-
-// Database Connection
-connectDatabase().catch((err) => {
-  console.error('Failed to connect to database:', err);
-  process.exit(1);
-});
 
 // Middleware
 app.use(helmet());
@@ -61,7 +50,7 @@ app.get('/', (req, res) => {
     service: 'Microfinance Management System API',
     version: '1.0.0',
     environment: process.env.NODE_ENV,
-    documentation: 'http://localhost:5000/api-docs',
+    documentation: `http://localhost:${PORT}/api-docs`,
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
@@ -114,7 +103,7 @@ app.use((req, res) => {
       message: 'Route not found',
       path: req.path,
       method: req.method,
-      documentation: 'Visit http://localhost:5000/api-docs for API documentation',
+      documentation: `Visit http://localhost:${PORT}/api-docs for API documentation`,
     },
     timestamp: new Date().toISOString(),
   });
@@ -123,18 +112,38 @@ app.use((req, res) => {
 // Error Handler (Must be last)
 app.use(errorHandler);
 
-// Server Start
-const server = app.listen(PORT, () => {
-  console.log(`
-    ╔═══════════════════════════════════════════════════════╗
-    ║  Microfinance Management System - Backend API         ║
-    ║  Server running on: http://localhost:${PORT}               ║
-    ║  Environment: ${process.env.NODE_ENV}                   ║
-    ║  API Docs: http://localhost:${PORT}/api-docs               ║
-    ║  Health: http://localhost:${PORT}/api/health              ║
-    ╚═══════════════════════════════════════════════════════╝
-  `);
-});
+const startServer = async () => {
+  try {
+    await connectDatabase();
+  } catch (err) {
+    console.error('Failed to connect to database:', err);
+    process.exit(1);
+  }
+
+  const server = app.listen(PORT, () => {
+    console.log(`
+Microfinance Management System - Backend API
+Server running on: http://localhost:${PORT}
+Environment: ${process.env.NODE_ENV || 'development'}
+API Docs: http://localhost:${PORT}/api-docs
+Health: http://localhost:${PORT}/api/health
+`);
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Set PORT to another value or stop the running process.`);
+      process.exit(1);
+    }
+
+    console.error('Server failed to start:', error);
+    process.exit(1);
+  });
+
+  return server;
+};
+
+const server = await startServer();
 
 // Graceful Shutdown
 process.on('SIGTERM', () => {
@@ -144,3 +153,5 @@ process.on('SIGTERM', () => {
     process.exit(0);
   });
 });
+
+export { app, startServer };

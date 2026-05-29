@@ -9,11 +9,7 @@ export default function Home() {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
-    } else {
-      router.push('/login');
-    }
+    router.push(user ? '/dashboard' : '/login');
   }, [user, router]);
 
   return (

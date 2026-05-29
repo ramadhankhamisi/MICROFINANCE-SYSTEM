@@ -46,8 +46,20 @@ export class FlexibleLoanController {
   static async create(req, res, next) {
     try {
       const loanData = req.body;
-      const result = await FlexibleLoanService.createLoan(loanData, req.user.id);
+      const result = await FlexibleLoanService.createLoan(loanData, req.user);
       sendSuccess(res, result, 'Loan created successfully', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAll(req, res, next) {
+    try {
+      const result = await FlexibleLoanService.getLoans(
+        req.user.branchId,
+        req.query.search || ''
+      );
+      sendSuccess(res, result, 'Loans retrieved');
     } catch (error) {
       next(error);
     }

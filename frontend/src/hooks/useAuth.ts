@@ -3,6 +3,10 @@ import { useAuthStore } from '@/contexts/authStore';
 import { api } from '@/utils/api';
 import { AuthResponse } from '@/types';
 
+interface ApiAuthResponse {
+  data: AuthResponse;
+}
+
 export const useAuth = () => {
   const { user, accessToken, isLoading, error, setAuth, logout, setError, setLoading } = useAuthStore();
 
@@ -11,7 +15,7 @@ export const useAuth = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.post('/auth/login', { email, password });
+        const response = await api.post<ApiAuthResponse>('/auth/login', { email, password });
         setAuth(response.data.data);
         return response.data.data;
       } catch (err: any) {
@@ -30,7 +34,7 @@ export const useAuth = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.post('/auth/register', userData);
+        const response = await api.post<ApiAuthResponse>('/auth/register', userData);
         setAuth(response.data.data);
         return response.data.data;
       } catch (err: any) {
